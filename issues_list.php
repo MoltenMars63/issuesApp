@@ -10,7 +10,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 }
 
 // Include database connection
-require_once '../database/database.php';
+require '../database/database.php';
 $pdo = Database::connect();
 
 // Get all issues from the database
