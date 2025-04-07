@@ -25,11 +25,11 @@ $current_user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 0;
 // Check if current user is admin
 $isAdmin = false;
 try {
-    $stmt = $pdo->prepare("SELECT 'admin' FROM iss_per WHERE id = :user_id");
+    $stmt = $pdo->prepare("SELECT admin FROM iss_per WHERE id = :user_id");
     $stmt->bindParam(':user_id', $current_user_id, PDO::PARAM_INT);
     $stmt->execute();
     $userData = $stmt->fetch(PDO::FETCH_ASSOC);
-    $isAdmin = $userData && isset($userData['admin']) && $userData['admin'] == 1;
+    $isAdmin = $userData && isset($userData['admin']) && $userData['admin'] === 'Y';
 } catch (PDOException $e) {;
     $error = "Database error " . $e->getMessage();
 }
