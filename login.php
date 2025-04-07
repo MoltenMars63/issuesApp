@@ -45,12 +45,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $login_time = date("Y-m-d H:i:s");
                     $ip = $_SERVER['REMOTE_ADDR'];
                     error_log("User login: ID={$row["id"]}, Name={$row["fname"]} {$row["lname"]}, Time=$login_time, IP=$ip");
-                    
-                    // Redirect based on admin status
-                    if ($is_admin) {
-                        $redirect_url = "issues_list.php";
-                    }
-                    header("Location: $redirect_url");
+                    header("Location: issues_list.php");
                     exit();
                 } else {
                     // No need to update the database for failed attempts
@@ -103,8 +98,8 @@ if (isset($_SESSION["logged_in"]) && $_SESSION["logged_in"] === true) {
         $error = "Session expired please login again";
     } else {
         $_SESSION["last_activity"] = time(); // Update last activity time
-        $redirect_url = ($_SESSION["is_admin"]) ? "issues_list.php" : "issues_list.php";
-        header("Location: $redirect_url");
+
+        header("Location: issues_list.php");
         exit();
     }
 }
