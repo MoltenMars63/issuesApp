@@ -5,6 +5,7 @@ session_start();
 // Check if user is logged in
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     // Redirect to login page if not logged in
+    session_destroy();
     header('Location: login.php');
     exit();
 }
@@ -38,10 +39,13 @@ try {
 try {
     $stmt = $pdo->prepare("
         SELECT i.id, i.short_description, i.long_description, i.open_date, 
-               i.close_date, i.priority, i.org, i.project, i.per_id, i.pdf_attachment, 
-               CONCAT(p.fname, ' ', p.lname) as assigned_to
+               i.close_date, i.priority, i.org, i.project, i.per_id, i.pdf_attachment,
+               i.creator_id, 
+               CONCAT(p.fname, ' ', p.lname) as assigned_to,
+               CONCAT(c.fname, ' ', c.lname) as created_by
         FROM iss_iss i
         LEFT JOIN iss_per p ON i.per_id = p.id
+        LEFT JOIN iss_per c ON i.creator_id = c.id
         ORDER BY i.project, i.priority, i.open_date
     ");
     $stmt->execute();
@@ -51,8 +55,8 @@ try {
     $stmt = $pdo->prepare("SELECT id, CONCAT(fname, ' ', lname) as full_name, email FROM iss_per ORDER BY fname, lname");
     $stmt->execute();
     $persons = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    // This function will be used to fetch comments for a specific issue
+    
+    // Function to get comments for an issue
     function getCommentsForIssue($pdo, $issueId) {
         $stmt = $pdo->prepare("
             SELECT c.id, c.short_comment, c.long_comment, c.posted_date, 
@@ -61,12 +65,12 @@ try {
             LEFT JOIN iss_per p ON c.per_id = p.id
             WHERE c.iss_id = :issueId
             ORDER BY c.posted_date DESC
-    ");
-    $stmt->bindParam(':issueId', $issueId, PDO::PARAM_INT);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        ");
+        $stmt->bindParam(':issueId', $issueId, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-}catch (PDOException $e) {
+} catch (PDOException $e) {
     $error = "Database error " . $e->getMessage();
 }
 
@@ -80,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_issue'])) {
         $priority = $_POST['priority'];
         $org = trim($_POST['org']);
         $project = trim($_POST['project']);
-        $per_id = $_POST['per_id'];
+        $per_id = $_POST['per_id']; // This is the person assigned to the issue
     
         // Handle PDF upload
         $attachmentPath = null;
@@ -112,10 +116,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_issue'])) {
         if (empty($short_description) || empty($open_date) || empty($priority) || empty($org) || empty($project) || empty($per_id)) {
             $error = "All required fields must be filled out";
         } elseif (!isset($error)) {
-            // Insert new issue with creator ID
+            // Insert new issue with current user as creator
             $stmt = $pdo->prepare("
-                INSERT INTO iss_iss (short_description, long_description, open_date, close_date, priority, org, project, per_id, pdf_attachment)
-                VALUES (:short_description, :long_description, :open_date, :close_date, :priority, :org, :project, :per_id, :pdf_attachment)
+                INSERT INTO iss_iss (short_description, long_description, open_date, close_date, priority, org, project, per_id, pdf_attachment, creator_id)
+                VALUES (:short_description, :long_description, :open_date, :close_date, :priority, :org, :project, :per_id, :pdf_attachment, :creator_id)
             ");
             
             $stmt->bindParam(':short_description', $short_description, PDO::PARAM_STR);
@@ -127,6 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_issue'])) {
             $stmt->bindParam(':project', $project, PDO::PARAM_STR);
             $stmt->bindParam(':per_id', $per_id, PDO::PARAM_INT);
             $stmt->bindParam(':pdf_attachment', $attachmentPath, PDO::PARAM_STR);
+            $stmt->bindParam(':creator_id', $current_user_id, PDO::PARAM_INT);
             
             $stmt->execute();
             
@@ -145,13 +150,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_issue'])) {
         $id = $_POST['issue_id'];
         
         // Check if user has permission to update this issue
-        $stmt = $pdo->prepare("SELECT per_id FROM iss_iss WHERE id = :id");
+        $stmt = $pdo->prepare("SELECT creator_id FROM iss_iss WHERE id = :id");
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
         $stmt->execute();
         $issueData = $stmt->fetch(PDO::FETCH_ASSOC);
         
         // Only allow if user is admin or created the issue
-        if ($isAdmin || ($issueData && $issueData['per_id'] == $current_user_id)) {
+        if ($isAdmin || ($issueData && $issueData['creator_id'] == $current_user_id)) {
             $short_description = trim($_POST['short_description']);
             $long_description = trim($_POST['long_description']);
             $open_date = $_POST['open_date'];
@@ -253,13 +258,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_issue'])) {
         $id = $_POST['issue_id'];
         
         // Check if user has permission to delete this issue
-        $stmt = $pdo->prepare("SELECT per_id, pdf_attachment FROM iss_iss WHERE id = :id");
+        $stmt = $pdo->prepare("SELECT creator_id, pdf_attachment FROM iss_iss WHERE id = :id");
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
         $stmt->execute();
         $issueData = $stmt->fetch(PDO::FETCH_ASSOC);
         
         // Only allow if user is admin or created the issue
-        if ($isAdmin || ($issueData && $issueData['per_id'] == $current_user_id)) {
+        if ($isAdmin || ($issueData && $issueData['creator_id'] == $current_user_id)) {
             // Delete the issue
             $stmt = $pdo->prepare("DELETE FROM iss_iss WHERE id = :id");
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
@@ -548,8 +553,23 @@ $userName = isset($_SESSION['user_name']) ? $_SESSION['user_name'] : 'User';
             margin-left: 15px;
         }
 
-        .comment-actions .action-btn {
+        .comment-actions .r-btn {
             margin-left: 5px;
+            background-color: #2196F3;
+            padding: 2px 6px;
+            font-size: 12px;
+        }
+
+        .comment-actions .u-btn {
+            margin-left: 5px;
+            background-color: #ff9800;
+            padding: 2px 6px;
+            font-size: 12px;
+        }
+
+        .comment-actions .d-btn {
+            margin-left: 5px;
+            background-color: #f44336;
             padding: 2px 6px;
             font-size: 12px;
         }
@@ -621,41 +641,41 @@ $userName = isset($_SESSION['user_name']) ? $_SESSION['user_name'] : 'User';
                                 ?>
                             </td>
                             <td class="actions">
-                                <button class="action-btn read-btn" 
-                                    data-id="<?php echo $issue['id'] ?>"
-                                    data-shortdesc="<?php echo htmlspecialchars($issue['short_description']) ?>"
-                                    data-longdesc="<?php echo htmlspecialchars($issue['long_description']) ?>"
-                                    data-priority="<?php echo htmlspecialchars($issue['priority']) ?>"
-                                    data-org="<?php echo htmlspecialchars($issue['org']) ?>"
-                                    data-project="<?php echo htmlspecialchars($issue['project']) ?>"
-                                    data-perid="<?php echo htmlspecialchars($issue['per_id']) ?>"
-                                    data-opendate="<?php echo formatDateForInput($issue['open_date']) ?>"
-                                    data-closedate="<?php echo formatDateForInput($issue['close_date']) ?>"
-                                    data-assignedto="<?php echo htmlspecialchars($issue['assigned_to']) ?>"
-                                    data-pdfpath="<?php echo htmlspecialchars($issue['pdf_attachment']) ?>">R</button>
-                                
-                                <?php if ($isAdmin || $issue['per_id'] == $current_user_id): ?>
-                                <button class="action-btn update-btn"
-                                    data-id="<?php echo $issue['id'] ?>"
-                                    data-shortdesc="<?php echo htmlspecialchars($issue['short_description']) ?>"
-                                    data-longdesc="<?php echo htmlspecialchars($issue['long_description']) ?>"
-                                    data-priority="<?php echo htmlspecialchars($issue['priority']) ?>"
-                                    data-org="<?php echo htmlspecialchars($issue['org']) ?>"
-                                    data-project="<?php echo htmlspecialchars($issue['project']) ?>"
-                                    data-perid="<?php echo htmlspecialchars($issue['per_id']) ?>"
-                                    data-opendate="<?php echo formatDateForInput($issue['open_date']) ?>"
-                                    data-closedate="<?php echo formatDateForInput($issue['close_date']) ?>"
-                                    data-assignedto="<?php echo htmlspecialchars($issue['assigned_to']) ?>"
-                                    data-pdfpath="<?php echo htmlspecialchars($issue['pdf_attachment']) ?>">U</button>
-                                
-                                <button class="action-btn delete-btn"
-                                    data-id="<?php echo $issue['id'] ?>"
-                                    data-shortdesc="<?php echo htmlspecialchars($issue['short_description']) ?>"
-                                    data-project="<?php echo htmlspecialchars($issue['project']) ?>">D</button>
-                                <?php else: ?>
-                                <span class="not-permitted" title="You can only modify issues you created">-</span>
-                                <?php endif ?>
-                            </td>
+    <button class="action-btn read-btn" 
+        data-id="<?php echo $issue['id'] ?>"
+        data-shortdesc="<?php echo htmlspecialchars($issue['short_description']) ?>"
+        data-longdesc="<?php echo htmlspecialchars($issue['long_description']) ?>"
+        data-priority="<?php echo htmlspecialchars($issue['priority']) ?>"
+        data-org="<?php echo htmlspecialchars($issue['org']) ?>"
+        data-project="<?php echo htmlspecialchars($issue['project']) ?>"
+        data-perid="<?php echo htmlspecialchars($issue['per_id']) ?>"
+        data-opendate="<?php echo formatDateForInput($issue['open_date']) ?>"
+        data-closedate="<?php echo formatDateForInput($issue['close_date']) ?>"
+        data-assignedto="<?php echo htmlspecialchars($issue['assigned_to']) ?>"
+        data-pdfpath="<?php echo htmlspecialchars($issue['pdf_attachment']) ?>">R</button>
+    
+        <?php if ($isAdmin || $issue['creator_id'] == $current_user_id): ?>
+        <button class="action-btn update-btn"
+            data-id="<?php echo $issue['id'] ?>"
+            data-shortdesc="<?php echo htmlspecialchars($issue['short_description']) ?>"
+            data-longdesc="<?php echo htmlspecialchars($issue['long_description']) ?>"
+            data-priority="<?php echo htmlspecialchars($issue['priority']) ?>"
+            data-org="<?php echo htmlspecialchars($issue['org']) ?>"
+            data-project="<?php echo htmlspecialchars($issue['project']) ?>"
+            data-perid="<?php echo htmlspecialchars($issue['per_id']) ?>"
+            data-opendate="<?php echo formatDateForInput($issue['open_date']) ?>"
+            data-closedate="<?php echo formatDateForInput($issue['close_date']) ?>"
+            data-assignedto="<?php echo htmlspecialchars($issue['assigned_to']) ?>"
+            data-pdfpath="<?php echo htmlspecialchars($issue['pdf_attachment']) ?>">U</button>
+
+        <button class="action-btn delete-btn"
+            data-id="<?php echo $issue['id'] ?>"
+            data-shortdesc="<?php echo htmlspecialchars($issue['short_description']) ?>"
+            data-project="<?php echo htmlspecialchars($issue['project']) ?>">D</button>
+        <?php else: ?>
+        <span class="not-permitted" title="You can only modify issues you created">-</span>
+        <?php endif ?>
+        </td>
                         </tr>
                     <?php endforeach ?>
                 </tbody>
@@ -1096,7 +1116,7 @@ readBtns.forEach(function(btn) {
                     
                     // Read button
                     var readBtn = document.createElement("button");
-                    readBtn.className = "action-btn comment-read-btn";
+                    readBtn.className = "r-btn comment-read-btn";
                     readBtn.textContent = "R";
                     readBtn.setAttribute("data-id", comment.id);
                     readBtn.setAttribute("data-shortcomment", comment.short_comment);
@@ -1106,7 +1126,7 @@ readBtns.forEach(function(btn) {
                     
                     // Update button
                     var updateBtn = document.createElement("button");
-                    updateBtn.className = "action-btn comment-update-btn";
+                    updateBtn.className = "u-btn comment-update-btn";
                     updateBtn.textContent = "U";
                     updateBtn.setAttribute("data-id", comment.id);
                     updateBtn.setAttribute("data-shortcomment", comment.short_comment);
@@ -1114,7 +1134,7 @@ readBtns.forEach(function(btn) {
                     
                     // Delete button
                     var deleteBtn = document.createElement("button");
-                    deleteBtn.className = "action-btn comment-delete-btn";
+                    deleteBtn.className = "d-btn comment-delete-btn";
                     deleteBtn.textContent = "D";
                     deleteBtn.setAttribute("data-id", comment.id);
                     deleteBtn.setAttribute("data-shortcomment", comment.short_comment);
