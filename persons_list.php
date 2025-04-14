@@ -13,6 +13,21 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 require '../database/database.php';
 $pdo = Database::connect();
 
+// Get current user ID from session
+$current_user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 0;
+
+// Check if current user is admin
+$isAdmin = false;
+try {
+    $stmt = $pdo->prepare("SELECT admin FROM iss_per WHERE id = :user_id");
+    $stmt->bindParam(':user_id', $current_user_id, PDO::PARAM_INT);
+    $stmt->execute();
+    $userData = $stmt->fetch(PDO::FETCH_ASSOC);
+    $isAdmin = $userData && isset($userData['admin']) && $userData['admin'] === 'Y';
+} catch (PDOException $e) {
+    $error = "Database error: " . $e->getMessage();
+}
+
 // Get all persons from the database
 try {
     $stmt = $pdo->prepare("
@@ -68,62 +83,72 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_person'])) {
 
 // Process form submission for updating person
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_person'])) {
-    try {
-        $id = $_POST['person_id'];
-        $fname = trim($_POST['fname']);
-        $lname = trim($_POST['lname']);
-        $mobile = trim($_POST['mobile']);
-        $email = trim($_POST['email']);
-        $admin = isset($_POST['admin']) ? 1 : 0;
-        
-        // Validate inputs
-        if (empty($fname) || empty($lname) || empty($email)) {
-            $error = "First name, last name, and email are required";
-        } else {
-            // Update person
-            $stmt = $pdo->prepare("
-                UPDATE iss_per 
-                SET fname = :fname,
-                    lname = :lname,
-                    mobile = :mobile,
-                    email = :email,
-                    admin = :admin
-                WHERE id = :id
-            ");
+    // Check if user is admin
+    if (!$isAdmin) {
+        $error = "You don't have permission to update person records.";
+    } else {
+        try {
+                $id = $_POST['person_id'];
+            $fname = trim($_POST['fname']);
+            $lname = trim($_POST['lname']);
+            $mobile = trim($_POST['mobile']);
+            $email = trim($_POST['email']);
+            $admin = isset($_POST['admin']) ? 1 : 0;
             
-            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-            $stmt->bindParam(':fname', $fname, PDO::PARAM_STR);
-            $stmt->bindParam(':lname', $lname, PDO::PARAM_STR);
-            $stmt->bindParam(':mobile', $mobile, PDO::PARAM_STR);
-            $stmt->bindParam(':email', $email, PDO::PARAM_STR);
-            $stmt->bindParam(':admin', $admin, PDO::PARAM_INT);
-            
-            $stmt->execute();
-            
-            // Redirect to refresh the page
-            header('Location: persons_list.php');
-            exit();
+            // Validate inputs
+            if (empty($fname) || empty($lname) || empty($email)) {
+                $error = "First name, last name, and email are required";
+            } else {
+                // Update person
+                $stmt = $pdo->prepare("
+                    UPDATE iss_per 
+                    SET fname = :fname,
+                        lname = :lname,
+                        mobile = :mobile,
+                        email = :email,
+                        admin = :admin
+                    WHERE id = :id
+                ");
+                
+                $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+                $stmt->bindParam(':fname', $fname, PDO::PARAM_STR);
+                $stmt->bindParam(':lname', $lname, PDO::PARAM_STR);
+                $stmt->bindParam(':mobile', $mobile, PDO::PARAM_STR);
+                $stmt->bindParam(':email', $email, PDO::PARAM_STR);
+                $stmt->bindParam(':admin', $admin, PDO::PARAM_INT);
+                
+                $stmt->execute();
+                
+                // Redirect to refresh the page
+                header('Location: persons_list.php');
+                exit();
+            }
+        } catch (PDOException $e) {
+            $error = "Error updating person: " . $e->getMessage();
         }
-    } catch (PDOException $e) {
-        $error = "Error updating person: " . $e->getMessage();
     }
 }
 
 // Process form submission for deleting person
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_person'])) {
-    try {
-        $id = $_POST['person_id'];
+    // Check if user is admin
+    if ($isAdmin) {
+        $error = "You don't have permission to delete person records.";
+    } else {
+        try {
+            $id = $_POST['person_id'];
         
-        // Delete the person
-        $stmt = $pdo->prepare("DELETE FROM iss_per WHERE id = :id");
-        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-        $stmt->execute();
-        
-        // Redirect to refresh the page
-        header('Location: persons_list.php');
-        exit();
-    } catch (PDOException $e) {
-        $error = "Error deleting person: " . $e->getMessage();
+            // Delete the person
+            $stmt = $pdo->prepare("DELETE FROM iss_per WHERE id = :id");
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            // Redirect to refresh the page
+            header('Location: persons_list.php');
+            exit();
+        } catch (PDOException $e) {
+            $error = "Error deleting person: " . $e->getMessage();
+        }
     }
 }
 
@@ -402,17 +427,19 @@ $userName = isset($_SESSION['user_name']) ? $_SESSION['user_name'] : 'User';
                                     data-mobile="<?php echo htmlspecialchars($person['mobile']); ?>"
                                     data-email="<?php echo htmlspecialchars($person['email']); ?>"
                                     data-admin="<?php echo $person['admin']; ?>">R</button>
-                                <button class="action-btn update-btn"
-                                    data-id="<?php echo $person['id']; ?>"
-                                    data-fname="<?php echo htmlspecialchars($person['fname']); ?>"
-                                    data-lname="<?php echo htmlspecialchars($person['lname']); ?>"
-                                    data-mobile="<?php echo htmlspecialchars($person['mobile']); ?>"
-                                    data-email="<?php echo htmlspecialchars($person['email']); ?>"
-                                    data-admin="<?php echo $person['admin']; ?>">U</button>
-                                <button class="action-btn delete-btn"
-                                    data-id="<?php echo $person['id']; ?>"
-                                    data-fname="<?php echo htmlspecialchars($person['fname']); ?>"
-                                    data-lname="<?php echo htmlspecialchars($person['lname']); ?>">D</button>
+                                <?php if ($isAdmin): ?>
+                                    <button class="action-btn update-btn"
+                                        data-id="<?php echo $person['id']; ?>"
+                                        data-fname="<?php echo htmlspecialchars($person['fname']); ?>"
+                                        data-lname="<?php echo htmlspecialchars($person['lname']); ?>"
+                                        data-mobile="<?php echo htmlspecialchars($person['mobile']); ?>"
+                                        data-email="<?php echo htmlspecialchars($person['email']); ?>"
+                                        data-admin="<?php echo $person['admin']; ?>">U</button>
+                                    <button class="action-btn delete-btn"
+                                        data-id="<?php echo $person['id']; ?>"
+                                        data-fname="<?php echo htmlspecialchars($person['fname']); ?>"
+                                        data-lname="<?php echo htmlspecialchars($person['lname']); ?>">D</button>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
