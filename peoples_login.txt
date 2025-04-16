@@ -1,0 +1,6 @@
+Admins:
+Username: mjchapa@svsu.edu	Password: learn
+
+Normal Users:
+Username: james@gmail.com	Password: learn
+Username: sallyjackson@svsu.edu	Password: students
