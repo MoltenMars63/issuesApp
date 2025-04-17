@@ -640,42 +640,42 @@ $userName = isset($_SESSION['user_name']) ? $_SESSION['user_name'] : 'User';
                                 }
                                 ?>
                             </td>
-                            <td class="actions">
-    <button class="action-btn read-btn" 
-        data-id="<?php echo $issue['id'] ?>"
-        data-shortdesc="<?php echo htmlspecialchars($issue['short_description']) ?>"
-        data-longdesc="<?php echo htmlspecialchars($issue['long_description']) ?>"
-        data-priority="<?php echo htmlspecialchars($issue['priority']) ?>"
-        data-org="<?php echo htmlspecialchars($issue['org']) ?>"
-        data-project="<?php echo htmlspecialchars($issue['project']) ?>"
-        data-perid="<?php echo htmlspecialchars($issue['per_id']) ?>"
-        data-opendate="<?php echo formatDateForInput($issue['open_date']) ?>"
-        data-closedate="<?php echo formatDateForInput($issue['close_date']) ?>"
-        data-assignedto="<?php echo htmlspecialchars($issue['assigned_to']) ?>"
-        data-pdfpath="<?php echo htmlspecialchars($issue['pdf_attachment']) ?>">R</button>
-    
-        <?php if ($isAdmin || $issue['creator_id'] == $current_user_id): ?>
-        <button class="action-btn update-btn"
-            data-id="<?php echo $issue['id'] ?>"
-            data-shortdesc="<?php echo htmlspecialchars($issue['short_description']) ?>"
-            data-longdesc="<?php echo htmlspecialchars($issue['long_description']) ?>"
-            data-priority="<?php echo htmlspecialchars($issue['priority']) ?>"
-            data-org="<?php echo htmlspecialchars($issue['org']) ?>"
-            data-project="<?php echo htmlspecialchars($issue['project']) ?>"
-            data-perid="<?php echo htmlspecialchars($issue['per_id']) ?>"
-            data-opendate="<?php echo formatDateForInput($issue['open_date']) ?>"
-            data-closedate="<?php echo formatDateForInput($issue['close_date']) ?>"
-            data-assignedto="<?php echo htmlspecialchars($issue['assigned_to']) ?>"
-            data-pdfpath="<?php echo htmlspecialchars($issue['pdf_attachment']) ?>">U</button>
+                        <td class="actions">
+                        <button class="action-btn read-btn" 
+                            data-id="<?php echo $issue['id'] ?>"
+                            data-shortdesc="<?php echo htmlspecialchars($issue['short_description']) ?>"
+                            data-longdesc="<?php echo htmlspecialchars($issue['long_description']) ?>"
+                            data-priority="<?php echo htmlspecialchars($issue['priority']) ?>"
+                            data-org="<?php echo htmlspecialchars($issue['org']) ?>"
+                            data-project="<?php echo htmlspecialchars($issue['project']) ?>"
+                            data-perid="<?php echo htmlspecialchars($issue['per_id']) ?>"
+                            data-opendate="<?php echo formatDateForInput($issue['open_date']) ?>"
+                            data-closedate="<?php echo formatDateForInput($issue['close_date']) ?>"
+                            data-assignedto="<?php echo htmlspecialchars($issue['assigned_to']) ?>"
+                            data-pdfpath="<?php echo htmlspecialchars($issue['pdf_attachment']) ?>">R</button>
 
-        <button class="action-btn delete-btn"
-            data-id="<?php echo $issue['id'] ?>"
-            data-shortdesc="<?php echo htmlspecialchars($issue['short_description']) ?>"
-            data-project="<?php echo htmlspecialchars($issue['project']) ?>">D</button>
-        <?php else: ?>
-        <span class="not-permitted" title="You can only modify issues you created">-</span>
-        <?php endif ?>
-        </td>
+                            <?php if ($isAdmin || $issue['creator_id'] == $current_user_id): ?>
+                            <button class="action-btn update-btn"
+                                data-id="<?php echo $issue['id'] ?>"
+                                data-shortdesc="<?php echo htmlspecialchars($issue['short_description']) ?>"
+                                data-longdesc="<?php echo htmlspecialchars($issue['long_description']) ?>"
+                                data-priority="<?php echo htmlspecialchars($issue['priority']) ?>"
+                                data-org="<?php echo htmlspecialchars($issue['org']) ?>"
+                                data-project="<?php echo htmlspecialchars($issue['project']) ?>"
+                                data-perid="<?php echo htmlspecialchars($issue['per_id']) ?>"
+                                data-opendate="<?php echo formatDateForInput($issue['open_date']) ?>"
+                                data-closedate="<?php echo formatDateForInput($issue['close_date']) ?>"
+                                data-assignedto="<?php echo htmlspecialchars($issue['assigned_to']) ?>"
+                                data-pdfpath="<?php echo htmlspecialchars($issue['pdf_attachment']) ?>">U</button>
+
+                            <button class="action-btn delete-btn"
+                                data-id="<?php echo $issue['id'] ?>"
+                                data-shortdesc="<?php echo htmlspecialchars($issue['short_description']) ?>"
+                                data-project="<?php echo htmlspecialchars($issue['project']) ?>">D</button>
+                            <?php else: ?>
+                            <span class="not-permitted" title="You can only modify issues you created">-</span>
+                            <?php endif ?>
+                            </td>
                         </tr>
                     <?php endforeach ?>
                 </tbody>
@@ -814,6 +814,16 @@ $userName = isset($_SESSION['user_name']) ? $_SESSION['user_name'] : 'User';
                     <div id="issue_comments_container" class="comments-container">
                     <!-- Comments will be loaded here dynamically -->
                 </div>
+                <!-- Add comment form to the read modal -->
+                    <div id="commentFormSection" style="margin-top: 20px; border-top: 1px solid #ccc; padding-top: 15px;">
+                        
+                        <div id="issue_comments_container">
+                            <!-- Comments will be loaded here dynamically -->
+                            <div class="modal-button-container" style="margin-top: 15px;">
+                                <button type="button" id="add_comment_btn" class="btn btn-success" data-issue-id="">Add Comment</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </form>
         </div>
@@ -924,36 +934,31 @@ $userName = isset($_SESSION['user_name']) ? $_SESSION['user_name'] : 'User';
             </form>
         </div>
     </div>
-        <!-- Read Comment Modal -->
+
+
+
+<!-- Read Comment Modal -->
 <div id="readCommentModal" class="modal">
     <div class="modal-content">
         <span class="close">&times;</span>
-        <h3>View Comment Details</h3>
-        <form>
-            <div class="form-group">
-                <label>Short Comment</label>
-                <input type="text" id="read_comment_short" class="form-control" readonly>
-            </div>
-            
-            <div class="form-group">
-                <label>Comment Details</label>
-                <textarea id="read_comment_long" class="form-control" readonly></textarea>
-            </div>
-            
-            <div class="form-group">
-                <label>Posted By</label>
-                <input type="text" id="read_comment_author" class="form-control" readonly>
-            </div>
-            
-            <div class="form-group">
-                <label>Posted Date</label>
-                <input type="text" id="read_comment_date" class="form-control" readonly>
-            </div>
-            
-            <div class="form-actions">
-                <button type="button" class="btn btn-secondary close-comment-modal">Close</button>
-            </div>
-        </form>
+        <h2>View Comment</h2>
+        <div class="form-group">
+            <label for="read_comment_short">Title:</label>
+            <input type="text" class="form-control" id="read_comment_short" readonly>
+        </div>
+        <div class="form-group">
+            <label for="read_comment_long">Comment:</label>
+            <textarea class="form-control" id="read_comment_long" rows="4" readonly></textarea>
+        </div>
+        <div class="form-group">
+            <label for="read_comment_author">Posted by:</label>
+            <input type="text" class="form-control" id="read_comment_author" readonly>
+        </div>
+        <div class="form-group">
+            <label for="read_comment_date">Date Posted:</label>
+            <input type="text" class="form-control" id="read_comment_date" readonly>
+        </div>
+        <button class="btn btn-secondary close-comment-modal">Close</button>
     </div>
 </div>
 
@@ -961,25 +966,21 @@ $userName = isset($_SESSION['user_name']) ? $_SESSION['user_name'] : 'User';
 <div id="updateCommentModal" class="modal">
     <div class="modal-content">
         <span class="close">&times;</span>
-        <h3>Update Comment</h3>
-        <form method="post" action="update_comment.php">
+        <h2>Update Comment</h2>
+        <form action="update_comment.php" method="post">
             <input type="hidden" id="update_comment_id" name="comment_id">
             <input type="hidden" id="update_comment_issue_id" name="issue_id">
             
             <div class="form-group">
-                <label for="update_comment_short">Short Comment *</label>
-                <input type="text" id="update_comment_short" name="short_comment" class="form-control" required>
+                <label for="update_comment_short">Title:</label>
+                <input type="text" class="form-control" id="update_comment_short" name="short_comment" required>
             </div>
-            
             <div class="form-group">
-                <label for="update_comment_long">Comment Details</label>
-                <textarea id="update_comment_long" name="long_comment" class="form-control"></textarea>
+                <label for="update_comment_long">Comment:</label>
+                <textarea class="form-control" id="update_comment_long" name="long_comment" rows="4"></textarea>
             </div>
-            
-            <div class="form-actions">
-                <button type="button" class="btn btn-secondary close-comment-modal">Cancel</button>
-                <button type="submit" class="btn btn-primary">Update Comment</button>
-            </div>
+            <button type="submit" class="btn btn-primary">Update Comment</button>
+            <button type="button" class="btn btn-secondary close-comment-modal">Cancel</button>
         </form>
     </div>
 </div>
@@ -988,306 +989,366 @@ $userName = isset($_SESSION['user_name']) ? $_SESSION['user_name'] : 'User';
 <div id="deleteCommentModal" class="modal">
     <div class="modal-content">
         <span class="close">&times;</span>
-        <h3>Delete Comment</h3>
-        <form method="post" action="delete_comment.php">
+        <h2>Delete Comment</h2>
+        <p>Are you sure you want to delete this comment?</p>
+        
+        <div class="form-group">
+            <label>Title:</label>
+            <p id="delete_comment_short"></p>
+        </div>
+        <div class="form-group">
+            <label>Comment:</label>
+            <p id="delete_comment_long"></p>
+        </div>
+        
+        <form action="delete_comment.php" method="post">
             <input type="hidden" id="delete_comment_id" name="comment_id">
             <input type="hidden" id="delete_comment_issue_id" name="issue_id">
             
-            <div class="alert alert-danger">
-                <p>Are you sure you want to delete this comment?</p>
-                <p><strong>Comment:</strong> <span id="delete_comment_short"></span></p>
-                <p><strong>Details:</strong> <span id="delete_comment_long"></span></p>
-            </div>
-            
-            <div class="form-actions">
-                <button type="button" class="btn btn-secondary close-comment-modal">Cancel</button>
-                <button type="submit" class="btn btn-danger">Delete Comment</button>
-            </div>
+            <button type="submit" class="btn btn-danger">Delete Comment</button>
+            <button type="button" class="btn btn-secondary close-comment-modal">Cancel</button>
         </form>
     </div>
 </div>
-    <script>
-        // Get the modals
-        var addModal = document.getElementById("addIssueModal");
-        var readModal = document.getElementById("readIssueModal");
-        var updateModal = document.getElementById("updateIssueModal");
-        var deleteModal = document.getElementById("deleteIssueModal");
-        
-        // Get the buttons that open the modals
-        var addBtn = document.getElementById("openAddModal");
-        var readBtns = document.querySelectorAll(".read-btn");
-        var updateBtns = document.querySelectorAll(".update-btn");
-        var deleteBtns = document.querySelectorAll(".delete-btn");
-        
-        // Get the <span> elements that close the modals
-        var closeSpans = document.getElementsByClassName("close");
-        
-        // Get the cancel buttons
-        var cancelAddBtn = document.getElementById("cancelAdd");
-        var closeModalBtns = document.querySelectorAll(".close-modal");
-        
-        // When the user clicks the button, open the add modal
-        addBtn.onclick = function() {
-            addModal.style.display = "block";
-        }
-        
-        // Add event listeners for read buttons
-readBtns.forEach(function(btn) {
-    btn.onclick = function() {
-        var id = this.getAttribute("data-id");
-        var shortDesc = this.getAttribute("data-shortdesc");
-        var longDesc = this.getAttribute("data-longdesc");
-        var priority = this.getAttribute("data-priority");
-        var org = this.getAttribute("data-org");
-        var project = this.getAttribute("data-project");
-        var openDate = this.getAttribute("data-opendate");
-        var closeDate = this.getAttribute("data-closedate");
-        var assignedTo = this.getAttribute("data-assignedto");
-        var pdfPath = this.getAttribute("data-pdfpath");
-        
-        // Populate read modal with data
-        document.getElementById("read_short_description").value = shortDesc;
-        document.getElementById("read_long_description").value = longDesc;
-        document.getElementById("read_priority").value = priority;
-        document.getElementById("read_org").value = org;
-        document.getElementById("read_project").value = project;
-        document.getElementById("read_open_date").value = openDate;
-        document.getElementById("read_close_date").value = closeDate;
-        document.getElementById("read_assigned_to").value = assignedTo;
-        
-        // Handle PDF link display
-        var pdfContainer = document.getElementById("read_pdf_link");
-        pdfContainer.innerHTML = "";
-        if (pdfPath && pdfPath !== "null") {
-            var link = document.createElement("a");
-            link.href = pdfPath;
-            link.target = "_blank";
-            link.textContent = "View PDF";
-            pdfContainer.appendChild(link);
-        } else {
-            pdfContainer.textContent = "No PDF attached";
-        }
-        
-        // Load comments for this issue
-        loadCommentsForIssue(id);
-        
-        // Open the modal
-        readModal.style.display = "block";
+
+    <!-- Add this new modal for adding comments -->
+    <div id="addCommentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close">&times;</span>
+                <h2>Add Comment</h2>
+            </div>
+            <div class="modal-body">
+                <form action="add_comment.php" method="post">
+                    <input type="hidden" id="add_comment_issue_id" name="iss_id">
+                    <div class="form-group">
+                        <label for="short_comment">Title:</label>
+                        <input type="text" class="form-control" id="short_comment" name="short_comment" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="long_comment">Comment:</label>
+                        <textarea class="form-control" id="long_comment" name="long_comment" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">Save Comment</button>
+                        <button type="button" class="btn btn-secondary close-comment-modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    // Get the modals
+    var addModal = document.getElementById("addIssueModal");
+    var readModal = document.getElementById("readIssueModal");
+    var updateModal = document.getElementById("updateIssueModal");
+    var deleteModal = document.getElementById("deleteIssueModal");
+    var addCommentModal = document.getElementById("addCommentModal"); // Add this line
+    
+    // Get the buttons that open the modals
+    var addBtn = document.getElementById("openAddModal");
+    var readBtns = document.querySelectorAll(".read-btn");
+    var updateBtns = document.querySelectorAll(".update-btn");
+    var deleteBtns = document.querySelectorAll(".delete-btn");
+
+    // Get the <span> elements that close the modals
+    var closeSpans = document.getElementsByClassName("close");
+    
+    // Get the cancel buttons
+    var cancelAddBtn = document.getElementById("cancelAdd");
+    var closeModalBtns = document.querySelectorAll(".close-modal");
+    
+    // When the user clicks the button, open the add modal
+    addBtn.onclick = function() {
+        addModal.style.display = "block";
     }
-});
-
-        // Function to load comments for an issue
-        function loadCommentsForIssue(issueId) {
-    var commentsContainer = document.getElementById("issue_comments_container");
-    commentsContainer.innerHTML = "<p>Loading comments...</p>";
     
-    // Store the issue ID in a data attribute for later use
-    commentsContainer.setAttribute('data-issue-id', issueId);
-
-    // Fetch comments using AJAX
-    fetch('get_issue_comments.php?issue_id=' + issueId)
-        .then(response => response.json())
-        .then(data => {
-            commentsContainer.innerHTML = "";
-    
-            if (data.length === 0) {
-                commentsContainer.innerHTML = "<p>No comments for this issue.</p>";
+    // Add event listeners for read buttons
+    readBtns.forEach(function(btn) {
+        btn.onclick = function() {
+            var id = this.getAttribute("data-id");
+            var shortDesc = this.getAttribute("data-shortdesc");
+            var longDesc = this.getAttribute("data-longdesc");
+            var priority = this.getAttribute("data-priority");
+            var org = this.getAttribute("data-org");
+            var project = this.getAttribute("data-project");
+            var openDate = this.getAttribute("data-opendate");
+            var closeDate = this.getAttribute("data-closedate");
+            var assignedTo = this.getAttribute("data-assignedto");
+            var pdfPath = this.getAttribute("data-pdfpath");
+            
+            // Populate read modal with data
+            document.getElementById("read_short_description").value = shortDesc;
+            document.getElementById("read_long_description").value = longDesc;
+            document.getElementById("read_priority").value = priority;
+            document.getElementById("read_org").value = org;
+            document.getElementById("read_project").value = project;
+            document.getElementById("read_open_date").value = openDate;
+            document.getElementById("read_close_date").value = closeDate;
+            document.getElementById("read_assigned_to").value = assignedTo;
+            
+            // Set issue ID for the add comment button
+            document.getElementById("add_comment_btn").setAttribute("data-issue-id", id);
+            
+            // Handle PDF link display
+            var pdfContainer = document.getElementById("read_pdf_link");
+            pdfContainer.innerHTML = "";
+            if (pdfPath && pdfPath !== "null") {
+                var link = document.createElement("a");
+                link.href = pdfPath;
+                link.target = "_blank";
+                link.textContent = "View PDF";
+                pdfContainer.appendChild(link);
             } else {
-                data.forEach(comment => {
-                    var commentDiv = document.createElement("div");
-                    commentDiv.className = "comment-item";
-                    
-                    var commentHeader = document.createElement("div");
-                    commentHeader.className = "comment-header";
-                    
-                    var commentTitle = document.createElement("strong");
-                    commentTitle.textContent = comment.short_comment;
-                    
-                    var commentMeta = document.createElement("span");
-                    var date = new Date(comment.posted_date);
-                    // Add a day to correct the date
-                    date.setDate(date.getDate() + 1);
-                    commentMeta.textContent = " - Posted by " + comment.commenter_name + " on " + 
-                       date.toLocaleDateString();
-                    
-                    // Create action buttons container
-                    var actionsDiv = document.createElement("div");
-                    actionsDiv.className = "comment-actions";
-                    
-                    // Read button
-                    var readBtn = document.createElement("button");
-                    readBtn.className = "r-btn comment-read-btn";
-                    readBtn.textContent = "R";
-                    readBtn.setAttribute("data-id", comment.id);
-                    readBtn.setAttribute("data-shortcomment", comment.short_comment);
-                    readBtn.setAttribute("data-longcomment", comment.long_comment);
-                    readBtn.setAttribute("data-author", comment.commenter_name);
-                    readBtn.setAttribute("data-date", date.toLocaleDateString());
-                    
-                    // Update button
-                    var updateBtn = document.createElement("button");
-                    updateBtn.className = "u-btn comment-update-btn";
-                    updateBtn.textContent = "U";
-                    updateBtn.setAttribute("data-id", comment.id);
-                    updateBtn.setAttribute("data-shortcomment", comment.short_comment);
-                    updateBtn.setAttribute("data-longcomment", comment.long_comment);
-                    
-                    // Delete button
-                    var deleteBtn = document.createElement("button");
-                    deleteBtn.className = "d-btn comment-delete-btn";
-                    deleteBtn.textContent = "D";
-                    deleteBtn.setAttribute("data-id", comment.id);
-                    deleteBtn.setAttribute("data-shortcomment", comment.short_comment);
-                    deleteBtn.setAttribute("data-longcomment", comment.long_comment);
-                    
-                    // Add event listeners to buttons
-                    readBtn.addEventListener("click", openReadCommentModal);
-                    updateBtn.addEventListener("click", openUpdateCommentModal);
-                    deleteBtn.addEventListener("click", openDeleteCommentModal);
-                    
-                    // Add buttons to actions container
-                    actionsDiv.appendChild(readBtn);
-                    actionsDiv.appendChild(updateBtn);
-                    actionsDiv.appendChild(deleteBtn);
-                    
-                    commentHeader.appendChild(commentTitle);
-                    commentHeader.appendChild(commentMeta);
-                    commentHeader.appendChild(actionsDiv);
-                
-                    commentDiv.appendChild(commentHeader);
-                    commentsContainer.appendChild(commentDiv);
-                });
+                pdfContainer.textContent = "No PDF attached";
             }
-        })
-        .catch(error => {
-            commentsContainer.innerHTML = "<p>Error loading comments. Please try again.</p>";
-            console.error('Error:', error);
-        });
-    }
-        
-        // Add event listeners for update buttons
-        updateBtns.forEach(function(btn) {
-            btn.onclick = function() {
-                var id = this.getAttribute("data-id");
-                var shortDesc = this.getAttribute("data-shortdesc");
-                var longDesc = this.getAttribute("data-longdesc");
-                var priority = this.getAttribute("data-priority");
-                var org = this.getAttribute("data-org");
-                var project = this.getAttribute("data-project");
-                var perid = this.getAttribute("data-perid");
-                var openDate = this.getAttribute("data-opendate");
-                var closeDate = this.getAttribute("data-closedate");
-                var pdfPath = this.getAttribute("data-pdfpath");
-                
-                // Populate update modal with data
-                document.getElementById("update_issue_id").value = id;
-                document.getElementById("update_short_description").value = shortDesc;
-                document.getElementById("update_long_description").value = longDesc;
-                document.getElementById("update_priority").value = priority;
-                document.getElementById("update_org").value = org;
-                document.getElementById("update_project").value = project;
-                document.getElementById("update_per_id").value = perid;
-                document.getElementById("update_open_date").value = openDate;
-                document.getElementById("update_close_date").value = closeDate;
-                
-                // Handle current PDF display
-                var pdfContainer = document.getElementById("update_current_pdf");
-                pdfContainer.innerHTML = "";
-                if (pdfPath && pdfPath !== "null") {
-                    var link = document.createElement("a");
-                    link.href = pdfPath;
-                    link.target = "_blank";
-                    link.textContent = "View Current PDF";
-                    pdfContainer.appendChild(link);
-                    document.getElementById("keep_pdf_container").style.display = "block";
-                } else {
-                    pdfContainer.textContent = "No PDF currently attached";
-                    document.getElementById("keep_pdf_container").style.display = "none";
-                }
-                
-                // Open the modal
-                updateModal.style.display = "block";
-            }
-        });
-        
-        // Add event listeners for delete buttons
-        deleteBtns.forEach(function(btn) {
-            btn.onclick = function() {
-                var id = this.getAttribute("data-id");
-                var shortDesc = this.getAttribute("data-shortdesc");
-                var project = this.getAttribute("data-project");
-                
-                // Populate delete modal with data
-                document.getElementById("delete_issue_id").value = id;
-                document.getElementById("delete_issue_id_display").textContent = id;
-                document.getElementById("delete_short_description").textContent = shortDesc;
-                document.getElementById("delete_project").textContent = project;
-                
-                // Open the modal
-                deleteModal.style.display = "block";
-            }
-        });
-        
-        // When the user clicks on <span> (x), close the modals
-        for (var i = 0; i < closeSpans.length; i++) {
-            closeSpans[i].onclick = function() {
-                addModal.style.display = "none";
-                readModal.style.display = "none";
-                updateModal.style.display = "none";
-                deleteModal.style.display = "none";
-            }
+            
+            // Load comments for this issue
+            loadCommentsForIssue(id);
+            
+            // Open the modal
+            readModal.style.display = "block";
         }
+    });
+    
+    // Create an Add Comment button and add event listener
+    var addCommentBtn = document.getElementById("add_comment_btn");
+    addCommentBtn.onclick = function(event) {
+        // Prevent any default action
+        event.preventDefault();
+        event.stopPropagation();
         
-        // When the user clicks on Cancel button, close the modals
-        cancelAddBtn.onclick = function() {
-            addModal.style.display = "none";
-        }
+        // Get the issue ID from the button's data attribute
+        var issueId = this.getAttribute("data-issue-id");
         
-        // Close modal buttons
-        closeModalBtns.forEach(function(btn) {
-            btn.onclick = function() {
-                addModal.style.display = "none";
-                readModal.style.display = "none";
-                updateModal.style.display = "none";
-                deleteModal.style.display = "none";
-            }
-        });
+        // Set the issue ID in the form's hidden input
+        document.getElementById("add_comment_issue_id").value = issueId;
         
-        // When the user clicks anywhere outside of the modal, close it
-        window.onclick = function(event) {
-            if (event.target == addModal) {
-                addModal.style.display = "none";
-            } else if (event.target == readModal) {
-                readModal.style.display = "none";
-            } else if (event.target == updateModal) {
-                updateModal.style.display = "none";
-            } else if (event.target == deleteModal) {
-                deleteModal.style.display = "none";
-            }
-        }
-        // Get comment modals
-        var readCommentModal = document.getElementById("readCommentModal");
-        var updateCommentModal = document.getElementById("updateCommentModal");
-        var deleteCommentModal = document.getElementById("deleteCommentModal");
+        // Show the add comment modal
+        addCommentModal.style.display = "block";
+        
+        // Make sure the read modal stays open
+        return false;
+    };
 
-        // Function to open read comment modal
-        function openReadCommentModal(event) {
+    // Function to load comments for an issue
+    function loadCommentsForIssue(issueId) {
+        var commentsContainer = document.getElementById("issue_comments_container");
+        commentsContainer.innerHTML = "<p>Loading comments...</p>";
+        
+        // Store the issue ID in a data attribute for later use
+        commentsContainer.setAttribute('data-issue-id', issueId);
+
+        // Fetch comments using AJAX
+        fetch('get_issue_comments.php?issue_id=' + issueId)
+            .then(response => response.json())
+            .then(data => {
+                commentsContainer.innerHTML = "";
+        
+                if (data.length === 0) {
+                    commentsContainer.innerHTML = "<p>No comments for this issue.</p>";
+                } else {
+                    data.forEach(comment => {
+                        var commentDiv = document.createElement("div");
+                        commentDiv.className = "comment-item";
+                        
+                        var commentHeader = document.createElement("div");
+                        commentHeader.className = "comment-header";
+                        
+                        var commentTitle = document.createElement("strong");
+                        commentTitle.textContent = comment.short_comment;
+                        
+                        var commentMeta = document.createElement("span");
+                        var date = new Date(comment.posted_date);
+                        // Add a day to correct the date
+                        date.setDate(date.getDate() + 1);
+                        commentMeta.textContent = " - Posted by " + comment.commenter_name + " on " + 
+                           date.toLocaleDateString();
+                        
+                        // Create action buttons container
+                        var actionsDiv = document.createElement("div");
+                        actionsDiv.className = "comment-actions";
+                        
+                        // Read button
+                        var readBtn = document.createElement("button");
+                        readBtn.className = "r-btn comment-read-btn";
+                        readBtn.textContent = "R";
+                        readBtn.setAttribute("data-id", comment.id);
+                        readBtn.setAttribute("data-shortcomment", comment.short_comment);
+                        readBtn.setAttribute("data-longcomment", comment.long_comment);
+                        readBtn.setAttribute("data-author", comment.commenter_name);
+                        readBtn.setAttribute("data-date", date.toLocaleDateString());
+                        
+                        // Update button
+                        var updateBtn = document.createElement("button");
+                        updateBtn.className = "u-btn comment-update-btn";
+                        updateBtn.textContent = "U";
+                        updateBtn.setAttribute("data-id", comment.id);
+                        updateBtn.setAttribute("data-shortcomment", comment.short_comment);
+                        updateBtn.setAttribute("data-longcomment", comment.long_comment);
+                        
+                        // Delete button
+                        var deleteBtn = document.createElement("button");
+                        deleteBtn.className = "d-btn comment-delete-btn";
+                        deleteBtn.textContent = "D";
+                        deleteBtn.setAttribute("data-id", comment.id);
+                        deleteBtn.setAttribute("data-shortcomment", comment.short_comment);
+                        deleteBtn.setAttribute("data-longcomment", comment.long_comment);
+                        
+                        // Add event listeners to buttons
+                        readBtn.addEventListener("click", openReadCommentModal);
+                        updateBtn.addEventListener("click", openUpdateCommentModal);
+                        deleteBtn.addEventListener("click", openDeleteCommentModal);
+                        
+                        // Add buttons to actions container
+                        actionsDiv.appendChild(readBtn);
+                        actionsDiv.appendChild(updateBtn);
+                        actionsDiv.appendChild(deleteBtn);
+                        
+                        commentHeader.appendChild(commentTitle);
+                        commentHeader.appendChild(commentMeta);
+                        commentHeader.appendChild(actionsDiv);
+                    
+                        commentDiv.appendChild(commentHeader);
+                        commentsContainer.appendChild(commentDiv);
+                    });
+                }
+            })
+            .catch(error => {
+                commentsContainer.innerHTML = "<p>Error loading comments. Please try again.</p>";
+                console.error('Error:', error);
+            });
+    }
+    
+    // Add event listeners for update buttons
+    updateBtns.forEach(function(btn) {
+        btn.onclick = function() {
+            var id = this.getAttribute("data-id");
+            var shortDesc = this.getAttribute("data-shortdesc");
+            var longDesc = this.getAttribute("data-longdesc");
+            var priority = this.getAttribute("data-priority");
+            var org = this.getAttribute("data-org");
+            var project = this.getAttribute("data-project");
+            var perid = this.getAttribute("data-perid");
+            var openDate = this.getAttribute("data-opendate");
+            var closeDate = this.getAttribute("data-closedate");
+            var pdfPath = this.getAttribute("data-pdfpath");
+            
+            // Populate update modal with data
+            document.getElementById("update_issue_id").value = id;
+            document.getElementById("update_short_description").value = shortDesc;
+            document.getElementById("update_long_description").value = longDesc;
+            document.getElementById("update_priority").value = priority;
+            document.getElementById("update_org").value = org;
+            document.getElementById("update_project").value = project;
+            document.getElementById("update_per_id").value = perid;
+            document.getElementById("update_open_date").value = openDate;
+            document.getElementById("update_close_date").value = closeDate;
+            
+            // Handle current PDF display
+            var pdfContainer = document.getElementById("update_current_pdf");
+            pdfContainer.innerHTML = "";
+            if (pdfPath && pdfPath !== "null") {
+                var link = document.createElement("a");
+                link.href = pdfPath;
+                link.target = "_blank";
+                link.textContent = "View Current PDF";
+                pdfContainer.appendChild(link);
+                document.getElementById("keep_pdf_container").style.display = "block";
+            } else {
+                pdfContainer.textContent = "No PDF currently attached";
+                document.getElementById("keep_pdf_container").style.display = "none";
+            }
+            
+            // Open the modal
+            updateModal.style.display = "block";
+        }
+    });
+    
+    // Add event listeners for delete buttons
+    deleteBtns.forEach(function(btn) {
+        btn.onclick = function() {
+            var id = this.getAttribute("data-id");
+            var shortDesc = this.getAttribute("data-shortdesc");
+            var project = this.getAttribute("data-project");
+            
+            // Populate delete modal with data
+            document.getElementById("delete_issue_id").value = id;
+            document.getElementById("delete_issue_id_display").textContent = id;
+            document.getElementById("delete_short_description").textContent = shortDesc;
+            document.getElementById("delete_project").textContent = project;
+            
+            // Open the modal
+            deleteModal.style.display = "block";
+        }
+    });
+    
+    // When the user clicks on <span> (x), close the modals
+    for (var i = 0; i < closeSpans.length; i++) {
+        closeSpans[i].onclick = function() {
+            addModal.style.display = "none";
+            readModal.style.display = "none";
+            updateModal.style.display = "none";
+            deleteModal.style.display = "none";
+            addCommentModal.style.display = "none"; // Add this line
+        }
+    }
+    
+    // When the user clicks on Cancel button, close the modals
+    cancelAddBtn.onclick = function() {
+        addModal.style.display = "none";
+    }
+    
+    // Close modal buttons
+    closeModalBtns.forEach(function(btn) {
+        btn.onclick = function() {
+            addModal.style.display = "none";
+            readModal.style.display = "none";
+            updateModal.style.display = "none";
+            deleteModal.style.display = "none";
+            addCommentModal.style.display = "none"; // Add this line
+        }
+    });
+    
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function(event) {
+        if (event.target == addModal) {
+            addModal.style.display = "none";
+        } else if (event.target == readModal) {
+            readModal.style.display = "none";
+        } else if (event.target == updateModal) {
+            updateModal.style.display = "none";
+        } else if (event.target == deleteModal) {
+            deleteModal.style.display = "none";
+        } else if (event.target == addCommentModal) { // Add this block
+            addCommentModal.style.display = "none";
+        }
+    }
+    
+    // Get comment modals
+    var readCommentModal = document.getElementById("readCommentModal");
+    var updateCommentModal = document.getElementById("updateCommentModal");
+    var deleteCommentModal = document.getElementById("deleteCommentModal");
+
+    // Function to open read comment modal
+    function openReadCommentModal(event) {
         // Stop event from propagating
         event.stopPropagation();
         event.preventDefault();
-    
+
         var id = this.getAttribute("data-id");
         var shortComment = this.getAttribute("data-shortcomment");
         var longComment = this.getAttribute("data-longcomment");
         var author = this.getAttribute("data-author");
         var date = this.getAttribute("data-date");
-    
+
         // Populate read modal with data
         document.getElementById("read_comment_short").value = shortComment;
         document.getElementById("read_comment_long").value = longComment;
         document.getElementById("read_comment_author").value = author;
         document.getElementById("read_comment_date").value = date;
-    
+
         // Open the modal
         readCommentModal.style.display = "block";
     }
@@ -1332,36 +1393,40 @@ readBtns.forEach(function(btn) {
         deleteCommentModal.style.display = "block";
     }
 
-        // Add event listeners for close buttons on comment modals
-        var closeCommentModalBtns = document.querySelectorAll(".close-comment-modal");
-        closeCommentModalBtns.forEach(function(btn) {
-            btn.onclick = function() {
-                readCommentModal.style.display = "none";
-                updateCommentModal.style.display = "none";
-                deleteCommentModal.style.display = "none";
-            }
-        });
+    // Add event listeners for close buttons on comment modals
+    var closeCommentModalBtns = document.querySelectorAll(".close-comment-modal");
+    closeCommentModalBtns.forEach(function(btn) {
+        btn.onclick = function() {
+            readCommentModal.style.display = "none";
+            updateCommentModal.style.display = "none";
+            deleteCommentModal.style.display = "none";
+            addCommentModal.style.display = "none"; // Add this line
+        }
+    });
 
-        // Add comment modal close functionality
-        var commentCloseSpans = document.querySelectorAll("#readCommentModal .close, #updateCommentModal .close, #deleteCommentModal .close");
-        commentCloseSpans.forEach(function(span) {
-            span.onclick = function() {
-                readCommentModal.style.display = "none";
-                updateCommentModal.style.display = "none";
-                deleteCommentModal.style.display = "none";
-            }
-        });
+    // Add comment modal close functionality
+    var commentCloseSpans = document.querySelectorAll("#readCommentModal .close, #updateCommentModal .close, #deleteCommentModal .close, #addCommentModal .close");
+    commentCloseSpans.forEach(function(span) {
+        span.onclick = function() {
+            readCommentModal.style.display = "none";
+            updateCommentModal.style.display = "none";
+            deleteCommentModal.style.display = "none";
+            addCommentModal.style.display = "none"; // Add this line
+        }
+    });
 
-        // Close comment modals when clicking outside
-        window.addEventListener("click", function(event) {
-            if (event.target == readCommentModal) {
-                readCommentModal.style.display = "none";
-            } else if (event.target == updateCommentModal) {
-                updateCommentModal.style.display = "none";
-            } else if (event.target == deleteCommentModal) {
-                deleteCommentModal.style.display = "none";
-            }
-        });       
-    </script>
+    // Close comment modals when clicking outside
+    window.addEventListener("click", function(event) {
+        if (event.target == readCommentModal) {
+            readCommentModal.style.display = "none";
+        } else if (event.target == updateCommentModal) {
+            updateCommentModal.style.display = "none";
+        } else if (event.target == deleteCommentModal) {
+            deleteCommentModal.style.display = "none";
+        } else if (event.target == addCommentModal) { // Add this block
+            addCommentModal.style.display = "none";
+        }
+    });       
+</script>
 </body>
 </html>
